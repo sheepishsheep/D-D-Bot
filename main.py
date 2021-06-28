@@ -4,6 +4,7 @@ import os #token lib
 import random #random lib
 import requests #request lib
 import json #json lib
+import re
 from replit import db #replit database lib
 
 
@@ -28,12 +29,6 @@ starter_ecrg =[
 if "responding" not in db.keys():
   db["responding"]=True
 
-#retrieve quotes from zenquotes.io
-def get_quote():
-  response=requests.get("https://zenquotes.io/api/random")
-  json_data=json.loads(response.text)
-  quote=json_data[0]['q']+" -" +json_data[0]['a']
-  return(quote)
 
 #update encouragments database
 def update_encouragements(encouraging_message):
@@ -67,10 +62,42 @@ async def on_message(msg):
   if msg.content.startswith('$hello'):
     await msg.channel.send('Hello')
 
-  #respond with zen quote
-  if msg.content.startswith('$inspire'):
-    quote=get_quote()
-    await msg.channel.send(quote)
+  #turn responding on/off
+  if msg.content.startswith("$responding"):
+    value = msg.content.split("$responding ",1)[1]
+    if value.lower()=="true":
+      db["responding"]=True
+      await msg.channel.send("Responding is on")
+    else:
+      db["responding"]=False
+      await msg.channel.send("Responding is off")
+
+
+   #rolls dice based on input
+  if msg.content.startswith("$roll"):
+    
+    dice=msg.content.split("$roll ",1)[1]
+    try:
+      numdice,dietype,mod=re.split("d|\+",dice)
+    except:
+      numdice,dietype=re.split("d",dice) 
+      mod="0";
+    
+    #add additional Value Error
+    
+    diceroll=int(mod);
+    for x in range(int(numdice)):
+      diceroll+=random.randint(1,int(dietype))
+    await msg.channel.send("you rolled "+str(diceroll))
+    
+
+
+
+
+
+
+
+  
 
   #respond with giphy gif
   if msg.content.startswith("I'm needy"):
@@ -120,15 +147,10 @@ async def on_message(msg):
       encouragements=list(db["encouragements"])
     await msg.channel.send(encouragements)
 
-  #turn responding on/off
-  if msg.content.startswith("$responding"):
-    value = msg.content.split("$responding ",1)[1]
-    if value.lower()=="true":
-      db["responding"]=True
-      await msg.channel.send("Responding is on")
-    else:
-      db["responding"]=False
-      await msg.channel.send("Responding is off")
+  
+
+
+
 
 #retried token ford discord
 client.run(os.getenv('TOKEN'))
