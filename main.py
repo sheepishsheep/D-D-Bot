@@ -1,3 +1,20 @@
+#D&D Discord Bot
+#Author: Z. Wool
+#End goals: 
+#Roll dice for:
+#           XAny input diceX
+#           specfic skill checks
+#           specifc spells
+#Upload D&DBeyond character sheet and pull skill checks and spell values. 
+#repond to dice roles with gifs for Nat ones or Nat 20s
+#use mongodb to store PC data (seperate code file)
+#update data (spell slots, HP, etc)
+#remove encouragment items
+
+
+
+
+
 import discord #discord lib
 import giphy_client #gif lib
 import os #token lib
@@ -79,16 +96,23 @@ async def on_message(msg):
     dice=msg.content.split("$roll ",1)[1]
     try:
       numdice,dietype,mod=re.split("d|\+",dice)
+      diceroll=int(mod);
+      for x in range(int(numdice)):
+        diceroll+=random.randint(1,int(dietype))
+      await msg.channel.send("you rolled "+str(diceroll))
     except:
-      numdice,dietype=re.split("d",dice) 
-      mod="0";
+      try:
+        numdice,dietype=re.split("d",dice) 
+        mod="0";
+        diceroll=int(mod);
+        for x in range(int(numdice)):
+          diceroll+=random.randint(1,int(dietype))
+        await msg.channel.send("you rolled "+str(diceroll))
+      except Exception:
+        await msg.channel.send("Please enter dice roll in the format of '$roll XdY+Z'")
+          
+  
     
-    #add additional Value Error
-    
-    diceroll=int(mod);
-    for x in range(int(numdice)):
-      diceroll+=random.randint(1,int(dietype))
-    await msg.channel.send("you rolled "+str(diceroll))
     
 
 
