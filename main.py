@@ -94,24 +94,77 @@ async def on_message(msg):
   if msg.content.startswith("$roll"):
     
     dice=msg.content.split("$roll ",1)[1]
+    api_key=os.getenv('GIFTOKEN')
+    api_instance=giphy_client.DefaultApi()
+    
+    #for dice rolls with modifers
     try:
       numdice,dietype,mod=re.split("d|\+",dice)
       diceroll=int(mod);
       for x in range(int(numdice)):
-        diceroll+=random.randint(1,int(dietype))
-      await msg.channel.send("you rolled "+str(diceroll))
+        roll=random.randint(1,int(dietype))
+        
+        #send gif when rolling Nat 20
+        if (dietype=="20") and (roll==20):
+          try:
+            api_response = api_instance.gifs_search_get(api_key,"Natural 20",limit=6)
+            lst = list(api_response.data)
+            giff=random.choice(lst)
+            await msg.channel.send(giff.embed_url)
+            await msg.channel.send("you rolled a Nat 20!")
+          except ApiException as e:
+            print("Exception when calling Api")
+        
+        #Send gif when rolling Nat 1
+        elif (dietype=="20") and (roll==1):
+          try:
+            api_response = api_instance.gifs_search_get(api_key,"Natural 1",limit=6)
+            lst = list(api_response.data)
+            giff=random.choice(lst)
+            await msg.channel.send(giff.embed_url)
+            await msg.channel.send("you rolled a Nat 1...")
+          except ApiException as e:
+            print("Exception when calling Api")
+        diceroll+=roll
+        await msg.channel.send("you rolled "+str(diceroll))
+      
+    #for dice rolls without modifiers
     except:
       try:
         numdice,dietype=re.split("d",dice) 
         mod="0";
         diceroll=int(mod);
         for x in range(int(numdice)):
-          diceroll+=random.randint(1,int(dietype))
-        await msg.channel.send("you rolled "+str(diceroll))
+          roll=random.randint(1,int(dietype))
+          
+          #send gif when rolling Nat 20
+          if (dietype=="20") and (roll==20):
+            try:
+              api_response = api_instance.gifs_search_get(api_key,"Natural 20",limit=6)
+              lst = list(api_response.data)
+              giff=random.choice(lst)
+              await msg.channel.send(giff.embed_url)
+              await msg.channel.send("you rolled a Nat 20!")
+            except ApiException as e:
+              print("Exception when calling Api")
+          
+          #Send gif when rolling Nat 1
+          elif (dietype=="20") and (roll==1):
+            try:
+              api_response = api_instance.gifs_search_get(api_key,"Natural 1",limit=6)
+              lst = list(api_response.data)
+              giff=random.choice(lst)
+              await msg.channel.send(giff.embed_url)
+              await msg.channel.send("you rolled a Nat 1...")
+            except ApiException as e:
+              print("Exception when calling Api")
+          diceroll+=roll
+          await msg.channel.send("you rolled "+str(diceroll))
       except Exception:
         await msg.channel.send("Please enter dice roll in the format of '$roll XdY+Z'")
-          
-  
+    
+   
+    
     
     
 
@@ -125,7 +178,7 @@ async def on_message(msg):
 
   #respond with giphy gif
   if msg.content.startswith("I'm needy"):
-    #await msg.channel.send('But that ass is fine')
+    
     api_key=os.getenv('GIFTOKEN')
     api_instance=giphy_client.DefaultApi()
 
