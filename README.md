@@ -1,10 +1,10 @@
-Testing Discord Bot apps Responsive Discord bot that "encourages" using an adjustable database of encouragments and access ZenQuotes and GIHPY APIs.
+End goal is a D&D assist bot to adi in rolling skill checks and all dice rolls. 
 
 Command responses are as follows:
 
 user input: "$hello", bot response: "hello"
 
-user input: "$inspire", bot response: a random quote from the Zen Quotes API
+user input: "$roll XdY+Z", bot reponse: returns the value of X number of Y-sided dice plus a value Z modifer
 
 user input: "I'm needy", bot response: a random "I love you" gif from the GIPHY API
 
