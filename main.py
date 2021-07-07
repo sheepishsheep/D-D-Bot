@@ -6,14 +6,10 @@
 #           specfic skill checks
 #           specifc spells
 #Upload D&DBeyond character sheet and pull skill checks and spell values. 
-#repond to dice roles with gifs for Nat ones or Nat 20s
-#use mongodb to store PC data (seperate code file)
+#Xrepond to dice roles with gifs for Nat ones or Nat 20sX
+#store character value in dictaries. 
 #update data (spell slots, HP, etc)
 #remove encouragment items
-
-
-
-
 
 import discord #discord lib
 import giphy_client #gif lib
@@ -22,8 +18,9 @@ import random #random lib
 import requests #request lib
 import json #json lib
 import re
-from replit import db #replit database lib
+import char
 
+from replit import db #replit database lib
 
 from giphy_client.rest import ApiException #api for giphy
 from discord.ext import commands #discord bot commands
@@ -31,10 +28,12 @@ from discord.ext import commands #discord bot commands
 #initiate client call to discord
 client =discord.Client()
 
-#sad "trigger" words
-sad_words=["sad","depressed","unhappy","miserable","depressing","gloomy"]
+#Testing charcter sheet upload
+from char import char_sheet
+PC1=char_sheet()
+print(PC1["Skills"])
 
-#starter encouraging words
+#Starting PC values
 starter_ecrg =[
   "Cheer up!",
   "Hang in there",
@@ -42,12 +41,7 @@ starter_ecrg =[
   "You are adequate"
 ]
 
-#value to turn responding on/off
-if "responding" not in db.keys():
-  db["responding"]=True
-
-
-#update encouragments database
+#CHANGE to update PC traits (HP, etc)
 def update_encouragements(encouraging_message):
   if "encouragements" in db.keys():
     encouragements=db["encouragements"]
@@ -56,12 +50,7 @@ def update_encouragements(encouraging_message):
   else:
     db["encouragements"]=[encouraging_message]
 
-#delete phrase from encouragement database
-def delete_encouragment(index):
-  encouragements = db["encouragements"]
-  if len(encouragements)>index:
-    del encouragements[index]
-    db["encouragements"]=encouragements
+
 
 #show we have logged into discord server
 @client.event
@@ -71,6 +60,9 @@ async def on_ready():
 #event reactions
 @client.event
 async def on_message(msg):
+  api_key=os.getenv('GIFTOKEN')
+  api_instance=giphy_client.DefaultApi()
+  
   #Say nothing if bot sends
   if msg.author==client.user:
     return
@@ -94,8 +86,7 @@ async def on_message(msg):
   if msg.content.startswith("$roll"):
     
     dice=msg.content.split("$roll ",1)[1]
-    api_key=os.getenv('GIFTOKEN')
-    api_instance=giphy_client.DefaultApi()
+    
     
     #for dice rolls with modifers
     try:
@@ -163,10 +154,52 @@ async def on_message(msg):
       except Exception:
         await msg.channel.send("Please enter dice roll in the format of '$roll XdY+Z'")
     
+  if msg.content.startswith("$skill"):
+    
+    skillname=msg.content.split("$skill ",1)[1]+" "
+    print((skillname))
+    try:
+      numdice=1 #Change for ADV/DIS
+      #mod=PC1["Skills"][skillname]
+      mod=int("".join(re.findall(r'\d+',PC1["Skills"][skillname])))
+      #mod=[int(s) for s in PC1["Skills"][skillname].split() if s.isdigit()]
+      print(mod)
+      #numdice,dietype,mod=re.split("d|\+",dice)
+      diceroll=int(mod);
+      for x in range(int(numdice)):
+        roll=random.randint(1,20)
+        
+        #send gif when rolling Nat 20
+        if (roll==20):
+          try:
+            api_response = api_instance.gifs_search_get(api_key,"Natural 20",limit=6)
+            lst = list(api_response.data)
+            giff=random.choice(lst)
+            await msg.channel.send(giff.embed_url)
+            await msg.channel.send("you rolled a Nat 20!")
+          except ApiException as e:
+            print("Exception when calling Api")
+        
+        #Send gif when rolling Nat 1
+        elif (roll==1):
+          try:
+            api_response = api_instance.gifs_search_get(api_key,"Natural 1",limit=6)
+            lst = list(api_response.data)
+            giff=random.choice(lst)
+            await msg.channel.send(giff.embed_url)
+            await msg.channel.send("you rolled a Nat 1...")
+          except ApiException as e:
+            print("Exception when calling Api")
+        diceroll+=roll
+        await msg.channel.send("you rolled "+str(diceroll))
+    except Exception:
+        await msg.channel.send("Please enter a correct Skill Check")  
+    #for dice rolls without modifiers
    
     
     
     
+    
 
 
 
@@ -176,56 +209,7 @@ async def on_message(msg):
 
   
 
-  #respond with giphy gif
-  if msg.content.startswith("I'm needy"):
-    
-    api_key=os.getenv('GIFTOKEN')
-    api_instance=giphy_client.DefaultApi()
-
-    try:
-      api_response = api_instance.gifs_search_get(api_key,"I love you",limit=10)
-      lst = list(api_response.data)
-      giff=random.choice(lst)
-
-      await msg.channel.send(giff.embed_url)
-    
-    except ApiException as e:
-      print("Exception when calling Api")
-      await msg.channel.send("No gif found :(")
-
-  #reply to sad words with encouragements 
-  if db["responding"]:
-    options=starter_ecrg
-    if "encouragements" in db.keys():
-      options=options+list(db["encouragements"])
-
-    if any(word in msg.content for word in sad_words):
-      await msg.channel.send(random.choice(options))
-
-  #add encouragment to database
-  if msg.content.startswith("$new"):
-    encouraging_message=msg.content.split("$new ",1)[1]
-    update_encouragements(encouraging_message)
-    await msg.channel.send("New encouraging message added")
-    
-  #remove encouragment from database
-  if msg.content.startswith("$del"):
-    encouragements=[]
-    if "encouragements" in db.keys():
-      index=int(msg.content.split("$del",1)[1])
-      delete_encouragment(index)
-      encouragements=db["encouragements"]
-    await msg.channel.send(encouragements)
   
-  #display list of encouragments in database
-  if msg.content.startswith("$list"):
-    encouragements=[]
-    if "encouragements" in db.keys():
-      encouragements=list(db["encouragements"])
-    await msg.channel.send(encouragements)
-
-  
-
 
 
 
